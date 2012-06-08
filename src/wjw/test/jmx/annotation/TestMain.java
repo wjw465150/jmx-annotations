@@ -24,6 +24,9 @@ public class TestMain {
       ms.registerMBean(mBean, new ObjectName("org.test:type=VisitorCounter"));
       ms.registerMBean(mBean, MBeanServerLocator.getObjectName(visitorCounterA));
       
+      User user = new User("Ò»Ö¦»¨",18);
+      DynamicMBean mBeanB = mBeanFactory.createMBean(user);
+      ms.registerMBean(mBeanB, new ObjectName("org.test:type=User"));
       
       System.out.println("started MBeanServer...");
 
