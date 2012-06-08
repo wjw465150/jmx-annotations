@@ -1,7 +1,5 @@
 /classes
 *.class
 
-# Package Files #
-*.jar
-*.war
-*.ear
+/jmx-annotations.jar
+
