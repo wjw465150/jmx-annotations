@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<project basedir="." default="build" name="jmx-annotations">
+  <property environment="env" />
+  <property name="debuglevel" value="source,lines,vars" />
+  <property name="target" value="1.6" />
+  <property name="source" value="1.6" />
+  <path id="jmx-annotations.classpath">
+    <pathelement location="lib/cdi-api-1.0.jar" />
+    <pathelement location="lib/javax.inject-1.jar" />
+  </path>
+  <target name="init">
+    <mkdir dir="dest" />
+    <copy includeemptydirs="false" todir="dest">
+      <fileset dir="src">
+        <exclude name="**/*.launch" />
+        <exclude name="**/*.java" />
+      </fileset>
+    </copy>
+  </target>
+  <target name="clean">
+    <delete dir="dest" quiet="true" />
+  </target>
+  <target depends="clean" name="cleanall" />
+  <target depends="build-subprojects,build-project" name="build" />
+  <target name="build-subprojects" />
+  <target depends="init" name="build-project">
+    <echo message="${ant.project.name}: ${ant.file}" />
+    <javac includeAntRuntime="false" debug="true" debuglevel="${debuglevel}" destdir="dest"
+      source="${source}" target="${target}">
+      <src path="src" />
+      <classpath refid="jmx-annotations.classpath" />
+    </javac>
+
+    <echo message="-post-build:begin" />
+    <echo message="project path: ${basedir}" />
+
+    <!-- 生成不需要依赖的jmx-annotations.jar  -->
+    <taskdef name="jarjar" classname="com.tonicsystems.jarjar.JarJarTask"  classpath="lib/jarjar-1.2.jar"/>
+    <jarjar jarfile="${basedir}/jmx-annotations.jar">
+      <fileset dir="${basedir}/dest">
+        <include name="**/wstone/**" />
+      </fileset>
+      <zipfileset src="lib/cdi-api-1.0.jar"/>
+      <zipfileset src="lib/javax.inject-1.jar"/>
+
+      <rule pattern="javax.decorator.**" result="internal.javax.decorator.@1"/>
+      <rule pattern="javax.enterprise.**" result="internal.javax.enterprise.@1"/>
+      <rule pattern="javax.inject.**" result="internal.javax.inject.@1"/>
+    </jarjar>
+    <delete dir="${basedir}/tmp" quiet="true"/>
+    <mkdir dir="${basedir}/tmp"/>
+    <unzip src="${basedir}/jmx-annotations.jar" dest="${basedir}/tmp">
+    </unzip>
+    <delete file="${basedir}/jmx-annotations.jar"/>
+    <jar destfile="${basedir}/jmx-annotations.jar">
+      <fileset dir="${basedir}/tmp">
+        <include name="org/**" />
+        <include name="internal/**" />
+      </fileset>
+	  <manifest>
+		<attribute name="Built-By" value="wjw465150@gmail.com" />
+		<attribute name="Build-Name" value="jmx-annotations" />
+		<attribute name="Build-Version" value="1.2" />
+		<attribute name="Build-Jdk" value="1.6" />
+	  </manifest>
+    </jar>
+    <delete dir="${basedir}/tmp" quiet="true"/>
+    <delete dir="${basedir}/dest" quiet="true"/>
+
+    <echo message="-post-build:end" />
+
+  </target>
+  <target
+    description="Build all projects which reference this project. Useful to propagate changes."
+    name="build-refprojects" />
+</project>

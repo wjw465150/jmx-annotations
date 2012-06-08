@@ -1,0 +1,100 @@
+Introduction
+
+Create and register JMX MBeans by adding some simple annotations to your classes. The project was inspired by the JSR-255 (JMX 2.0) specification, 
+which provides annotations to create MBeans, but it is currently inactive. However, 
+it goes further by allowing you to automatically or programmatically create and register the MBeans. Currently, it only works with CDI (JEE6) as a portable extension,
+but I plan to support Seam as well as Spring.
+
+Automatic creation and registration
+
+An MBean is created and registered automatically when your class is instantiated.
+
+Programatic creation and registration
+
+If you don't want to register your MBean automatically, you can deactivate the auto register feature and the use the API to programatically create and register an MBean within the MBeanServer.
+Status
+
+Example
+
+import org.wstone.jmx.*;
+
+@MBean
+@Description("访问计数类")
+public class VisitorCounter {
+
+  @ManagedAttribute(writable = false, readable = true)
+  @Description("访问次数")
+  private int visits;
+
+  @ManagedOperation(impact = Impact.WRITE)
+  @Description("重置访问次数")
+  public void resetVisits() {
+    this.visits = 0;
+  }
+
+  @ManagedOperation(impact = Impact.WRITE)
+  @Description("带参数的重置访问次数")
+  public void resetVisits(@Description("次数") int visits) {
+    this.visits = visits;
+  }
+
+  @ManagedOperation(impact = Impact.READ_WRITE)
+  @Description("累加访问次数")
+  public int incVisits() {
+    return ++this.visits;
+  }
+
+  @ManagedOperation(impact = Impact.WRITE)
+  @Description("设置访问次数")
+  public void setVisits(@Description("次数") int visits) {
+    this.visits = visits;
+  }
+
+  public int getVisits() {
+    return visits;
+  }
+
+}
+
+You can also use the API to programmatically create and register your MBeans:
+
+import javax.management.DynamicMBean;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
+
+import org.wstone.jmx.MBeanFactory;
+import org.wstone.jmx.std.StandardMBeanFactory;
+import org.wstone.jmx.util.MBeanServerLocator;
+
+public class TestMain {
+  public static void main(String[] args) {
+    try {
+      MBeanFactory mBeanFactory = new StandardMBeanFactory();
+
+      // create the MBean
+      VisitorCounter visitorCounterA = new VisitorCounter();
+      DynamicMBean mBean = mBeanFactory.createMBean(visitorCounterA);
+
+      // find MBeanServer
+      MBeanServer ms = MBeanServerLocator.instance().getmBeanServer();
+
+      // register the MBean
+      ms.registerMBean(mBean, new ObjectName("org.test:type=VisitorCounter"));
+      ms.registerMBean(mBean, MBeanServerLocator.getObjectName(visitorCounterA));
+      
+      
+      System.out.println("started MBeanServer...");
+
+      for (;;) {
+        try {
+          java.util.concurrent.TimeUnit.SECONDS.sleep(10);
+        } catch (InterruptedException ex) {
+          Thread.currentThread().interrupt();
+          System.exit(0);
+        }
+      }
+    } catch (Exception e) {
+      e.printStackTrace();
+    }
+  }
+}

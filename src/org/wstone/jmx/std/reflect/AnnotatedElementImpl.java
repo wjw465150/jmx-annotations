@@ -1,0 +1,288 @@
+package org.wstone.jmx.std.reflect;
+
+import java.lang.annotation.Annotation;
+import java.lang.reflect.Type;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Set;
+
+import javax.enterprise.inject.spi.Annotated;
+import javax.enterprise.inject.spi.AnnotatedType;
+
+/**
+ * Abstract introspected view of a Bean
+ */
+public class AnnotatedElementImpl implements Annotated, BaseTypeAnnotated
+{
+  private static final AnnotationSet NULL_ANN_SET
+    = new AnnotationSet();
+  
+  private BaseType _type;
+
+  private Set<Type> _typeSet;
+
+  private AnnotationSet _annSet;
+  
+  private Annotated _sourceAnnotated;
+
+  public AnnotatedElementImpl(BaseType type,
+                              Annotated annotated,
+                              Annotation []annList)
+  {
+    _type = type;
+
+    if (annotated != null) {
+      Set<Annotation> annSet = annotated.getAnnotations();
+      
+      if (annSet != null && annSet.size() > 0) {
+        _annSet = new AnnotationSet(annSet);
+      }
+    }
+    
+    if (annList != null && annList.length > 0) {
+      if (_annSet == null)
+        _annSet = new AnnotationSet();
+      
+      for (Annotation ann : annList) {
+        _annSet.add(ann);
+      }
+    }
+    
+    _sourceAnnotated = annotated;
+  }
+
+  public AnnotatedElementImpl(Annotated annotated)
+  {
+    this(createBaseType(annotated), annotated, null);
+  }
+
+  public AnnotatedElementImpl(Class<?> cl, 
+                              Annotated annotated,
+                              Annotation []annotationList)
+  {
+    this(createBaseType(cl), annotated, annotationList);
+  }
+  
+  protected static BaseType createBaseType(Annotated ann)
+  {
+    if (ann instanceof BaseTypeAnnotated)
+      return ((BaseTypeAnnotated) ann).getBaseTypeImpl();
+    else
+      return createBaseType(ann.getBaseType());
+  }
+  
+  protected static BaseType createBaseType(AnnotatedType<?> declaringType)
+  {
+    if (declaringType instanceof BaseTypeAnnotated)
+      return ((BaseTypeAnnotated) declaringType).getBaseTypeImpl();
+    else
+      return createBaseType(declaringType.getBaseType());
+  }
+  
+  protected static BaseType createBaseType(AnnotatedType<?> declaringType,
+                                           Type type)
+  {
+    HashMap<String,BaseType> paramMap = null;
+    String paramDeclName = null;
+    
+    return createBaseType(declaringType, type, paramMap, paramDeclName);
+  }
+  
+  protected static BaseType createBaseType(AnnotatedType<?> declaringType,
+                                           Type type,
+                                           String paramDeclName)
+  {
+    HashMap<String,BaseType> paramMap = null;
+    
+    return createBaseType(declaringType, type, paramMap, paramDeclName);
+  }
+  
+  protected static BaseType createBaseType(AnnotatedType<?> declaringType,
+                                           Type type,
+                                           HashMap<String,BaseType> paramMap,
+                                           String paramDeclName)
+  {
+    // ioc/0242
+    BaseType baseType = createBaseType(declaringType, 
+                                       type,
+                                       paramMap,
+                                       paramDeclName,
+                                       BaseType.ClassFill.PLAIN);
+    
+    return baseType;
+  }
+  
+  protected static BaseType createBaseType(AnnotatedType<?> declaringType,
+                                           Type type,
+                                           HashMap<String,BaseType> paramMap,
+                                           String paramDeclName,
+                                           BaseType.ClassFill classFill)
+    {
+      if (declaringType instanceof BaseTypeAnnotated) {
+        BaseTypeAnnotated baseTypeAnn = (BaseTypeAnnotated) declaringType;
+        
+        if (paramMap == null)
+          paramMap = baseTypeAnn.getBaseTypeParamMap();
+      
+        return BaseType.create(type, paramMap, paramDeclName, classFill);
+      }
+    /*
+    else if (declaringType instanceof ReflectionAnnotatedType<?>) {
+      declBaseType = ((ReflectionAnnotatedType<?>) declaringType).getBaseTypeImpl();
+      
+      return declBaseType.create(type, declBaseType.getParamMap(), true);
+    }
+    */
+    
+    return createBaseType(type);
+  }
+
+  protected static BaseType createBaseType(Type type)
+  {
+    BaseTypeFactory cdiManager = BaseTypeFactory.getCurrent();
+    
+    return cdiManager.createForSource(type);
+  }
+
+  @Override
+  public Type getBaseType()
+  {
+    return _type.toType();
+  }
+  
+  @Override
+  public BaseType getBaseTypeImpl()
+  {
+    return _type;
+  }
+  
+  @Override
+  public HashMap<String,BaseType> getBaseTypeParamMap()
+  {
+    return getBaseTypeImpl().getParamMap();
+  }
+  
+  @Override
+  public Set<VarType<?>> getTypeVariables()
+  {
+    HashSet<VarType<?>> typeVariables = new HashSet<VarType<?>>();
+    
+    fillTypeVariables(typeVariables);
+    
+    return typeVariables;
+  }
+
+  protected void fillTypeVariables(Set<VarType<?>> typeVariables)
+  {
+    getBaseTypeImpl().fillSyntheticTypes(typeVariables);
+  }
+
+  @Override
+  public Set<Type> getTypeClosure()
+  {
+    if (_typeSet == null) {
+      BaseTypeFactory cdiManager = BaseTypeFactory.getCurrent();
+      
+      _typeSet = _type.getTypeClosure(cdiManager);
+    }
+
+    return _typeSet;
+  }
+
+  public void addAnnotations(Collection<Annotation> annSet)
+  {
+    for (Annotation ann : annSet)
+      addAnnotation(ann);
+  }
+
+  public void addAnnotations(Annotation []annSet)
+  {
+    for (Annotation ann : annSet)
+      addAnnotation(ann);
+  }
+  
+  public void addAnnotation(Annotation newAnn)
+  {
+    if (_annSet == null)
+      _annSet = new AnnotationSet();
+    
+    _annSet.replace(newAnn);
+  }
+  
+  public void addAnnotationIfAbsent(Annotation newAnn)
+  {
+    if (! isAnnotationPresent(newAnn.annotationType()))
+      addAnnotation(newAnn);
+  }
+
+  public void removeAnnotation(Annotation ann)
+  {
+    if (_annSet == null)
+      return;
+
+    _annSet.remove(ann);
+  }
+
+  public void clearAnnotations()
+  {
+    if (_annSet != null)
+      _annSet.clear();
+  }
+  
+  @Override
+  public void addOverrideAnnotation(Annotation ann)
+  {
+    _annSet.add(ann);
+
+    // ioc/10a0 - @NoAspect - cache that base class has no aspect
+    if (_sourceAnnotated instanceof BaseTypeAnnotated) {
+      BaseTypeAnnotated baseAnn = (BaseTypeAnnotated) _sourceAnnotated;
+      
+      baseAnn.addOverrideAnnotation(ann);
+    }
+  }
+
+  /**
+   * Returns the declared annotations
+   */
+  @Override
+  public Set<Annotation> getAnnotations()
+  {
+    if (_annSet != null)
+      return _annSet;
+    else
+      return NULL_ANN_SET;
+  }
+
+  /**
+   * Returns the matching annotation
+   */
+  @Override
+  @SuppressWarnings("unchecked")
+  public <T extends Annotation> T getAnnotation(Class<T> annType)
+  {
+    if (_annSet == null)
+      return null;
+    
+    return (T) _annSet.getAnnotation(annType);
+  }
+
+  /**
+   * Returns true if the annotation is present)
+   */
+  @Override
+  public boolean isAnnotationPresent(Class<? extends Annotation> annType)
+  {
+    if (_annSet == null)
+      return false;
+    
+    return _annSet.isAnnotationPresent(annType);
+  }
+
+  @Override
+  public String toString()
+  {
+    return getClass().getSimpleName() + "[" + _type + "]";
+  }
+}
