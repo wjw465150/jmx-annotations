@@ -9,9 +9,6 @@ import java.util.WeakHashMap;
  */
 public class ReflectionAnnotatedFactory
 {
-  private WeakHashMap<Type,SoftReference<ReflectionSimpleAnnotatedType<?>>> _simpleTypeMap
-    = new WeakHashMap<Type,SoftReference<ReflectionSimpleAnnotatedType<?>>>();
-
   private WeakHashMap<Type,SoftReference<ReflectionAnnotatedType<?>>> _typeMap
     = new WeakHashMap<Type,SoftReference<ReflectionAnnotatedType<?>>>();
 
@@ -29,45 +26,6 @@ public class ReflectionAnnotatedFactory
    * Introspects a simple reflection type, i.e. a type without
    * fields and methods.
    */
-  public static <T> ReflectionSimpleAnnotatedType<T> 
-  introspectSimpleType(Class<T> cl)
-  {
-    return getCurrent().introspectSimpleTypeImpl(cl);
-  }
-
-  /**
-   * Introspects the reflection type
-   */
-  synchronized
-  private <T> ReflectionSimpleAnnotatedType<T>
-  introspectSimpleTypeImpl(Type type)
-  {
-    SoftReference<ReflectionSimpleAnnotatedType<?>> typeRef
-      = _simpleTypeMap.get(type);
-
-    ReflectionSimpleAnnotatedType<T> annType = null;
-
-    if (typeRef != null)
-      annType = (ReflectionSimpleAnnotatedType<T>) typeRef.get();
-
-    if (type == null) {
-      BaseTypeFactory inject = BaseTypeFactory.getCurrent();
-      BaseType baseType = inject.createForSource(type);
-      
-      annType = new ReflectionSimpleAnnotatedType(inject, baseType);
-
-      typeRef = new SoftReference<ReflectionSimpleAnnotatedType<?>>(annType);
-
-      _simpleTypeMap.put(type, typeRef);
-    }
-
-    return annType;
-  }
-
-  /**
-   * Introspects a simple reflection type, i.e. a type without
-   * fields and methods.
-   */
   public static <X> ReflectionAnnotatedType<X> introspectType(Class<X> cl)
   {
     return getCurrent().introspectTypeImpl(cl);
@@ -79,13 +37,6 @@ public class ReflectionAnnotatedFactory
    */
   public static <X> ReflectionAnnotatedType<X> introspectType(BaseType type)
   {
-    ClassLoader loader;
-    
-    if (type instanceof ClassType)
-      loader = type.getRawClass().getClassLoader();
-    else
-      loader = Thread.currentThread().getContextClassLoader();
-    
     return getCurrent().introspectTypeImpl(type);
   }
 

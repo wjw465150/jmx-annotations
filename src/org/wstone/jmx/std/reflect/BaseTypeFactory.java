@@ -16,9 +16,6 @@ public class BaseTypeFactory
   private LruCache<Type,BaseType> _targetCache
     = new LruCache<Type,BaseType>(128);
 
-  private LruCache<Class<?>,BaseType> _classCache
-    = new LruCache<Class<?>,BaseType>(128);
-
   private static final BaseTypeFactory _current = new BaseTypeFactory();
   public static BaseTypeFactory getCurrent() {
     return _current;
