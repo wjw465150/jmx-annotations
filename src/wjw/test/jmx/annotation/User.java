@@ -1,14 +1,10 @@
 package wjw.test.jmx.annotation;
 
 public class User {
-  private String name;
+  private final String name;
 
   public String getName() {
     return name;
-  }
-
-  public void setName(String name) {
-    this.name = name;
   }
 
   public int getAge() {
@@ -25,6 +21,10 @@ public class User {
     super();
     this.name = name;
     this.age = age;
+  }
+
+  private static void setTitle(String title) {
+    System.out.println("this title is:" + title);
   }
 
 }

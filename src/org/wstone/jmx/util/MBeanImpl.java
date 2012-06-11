@@ -213,7 +213,7 @@ public class MBeanImpl<T> implements DynamicMBean {
     return primitive;
   }
 
-  private static String StrDump(Object[] a) {
+  private String StrDump(Object[] a) {
     if (a == null)
       return "null";
 
@@ -225,7 +225,7 @@ public class MBeanImpl<T> implements DynamicMBean {
     return buf.toString();
   }
 
-  private static void deepToString(Object[] a, StringBuilder buf,
+  private void deepToString(Object[] a, StringBuilder buf,
       Set<Object[]> dejaVu) {
     if (a == null) {
       buf.append("null");

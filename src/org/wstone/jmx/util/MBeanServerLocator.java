@@ -14,17 +14,13 @@ public class MBeanServerLocator {
 
   private MBeanServer mBeanServer;
 
-  private static MBeanServerLocator instance;
+  private static final MBeanServerLocator instance = new MBeanServerLocator();
 
   private MBeanServerLocator() {
     this.mBeanServer = locateMBeanServer();
   }
 
   public static MBeanServerLocator instance() {
-    if (instance == null) {
-      instance = new MBeanServerLocator();
-    }
-
     return instance;
   }
 

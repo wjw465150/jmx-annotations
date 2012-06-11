@@ -2,6 +2,7 @@ package org.wstone.jmx.cdi;
 
 import java.lang.reflect.Field;
 import java.lang.reflect.Method;
+import java.lang.reflect.Modifier;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -20,6 +21,7 @@ import javax.management.MBeanParameterInfo;
 
 import org.wstone.jmx.Description;
 import org.wstone.jmx.Impact;
+import org.wstone.jmx.ManagedOperation;
 
 /**
  * @author German Escobar
@@ -65,8 +67,7 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
   /*
    * (non-Javadoc)
    * 
-   * @see
-   * org.wstone.jmx.cdi.AnnotatedTypeVisitor#visitAnnotatedType(javax
+   * @see org.wstone.jmx.cdi.AnnotatedTypeVisitor#visitAnnotatedType(javax
    * .enterprise.inject.spi.AnnotatedType)
    */
   @Override
@@ -83,8 +84,7 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
   /*
    * (non-Javadoc)
    * 
-   * @see
-   * org.wstone.jmx.cdi.AnnotatedTypeVisitor#visitAnnotatedConstructor
+   * @see org.wstone.jmx.cdi.AnnotatedTypeVisitor#visitAnnotatedConstructor
    * (javax.enterprise.inject.spi.AnnotatedConstructor)
    */
   @Override
@@ -102,8 +102,7 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
   /*
    * (non-Javadoc)
    * 
-   * @see
-   * org.wstone.jmx.cdi.AnnotatedTypeVisitor#visitAnnotatedField(javax
+   * @see org.wstone.jmx.cdi.AnnotatedTypeVisitor#visitAnnotatedField(javax
    * .enterprise.inject.spi.AnnotatedField)
    */
   @Override
@@ -117,6 +116,10 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
 
   protected <T> void visitAnnotatedField(AnnotatedField<T> af, boolean readable, boolean writable) {
     // add the field to the collection of exposed fields
+    Field field = af.getJavaMember();
+    if ((field.getModifiers() & Modifier.FINAL) == Modifier.FINAL) {
+      writable = false;
+    }
     exposedFields.add(af.getJavaMember());
 
     // create the MBeanAttributeInfo
@@ -126,7 +129,6 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
       fieldDescription = annDescription.value();
     }
 
-    Field field = af.getJavaMember();
     MBeanAttributeInfo attributeInfo = new MBeanAttributeInfo(field.getName(), field.getType().getName(),
         fieldDescription, readable, writable, false);
 
@@ -136,8 +138,7 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
   /*
    * (non-Javadoc)
    * 
-   * @see
-   * org.wstone.jmx.cdi.AnnotatedTypeVisitor#visitAnnotatedMethod(javax
+   * @see org.wstone.jmx.cdi.AnnotatedTypeVisitor#visitAnnotatedMethod(javax
    * .enterprise.inject.spi.AnnotatedMethod)
    */
   @Override
@@ -147,6 +148,12 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
 
   protected <T> void visitAnnotatedMethod(AnnotatedMethod<T> am, Impact impact) {
     // add the method to the collection of exposed methods
+    Method method = am.getJavaMember();
+    if (am.getAnnotation(ManagedOperation.class) == null) { //@wjw_note: 对没有注解的方法,只暴露public的.
+      if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC) {
+        return;
+      }
+    }
     exposedMethods.add(am.getJavaMember());
 
     // create the MBeanOperationInfo
@@ -155,8 +162,6 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
       Description annDescription = am.getAnnotation(Description.class);
       methodDescription = annDescription.value();
     }
-
-    Method method = am.getJavaMember();
 
     List<AnnotatedParameter<T>> annotatedParams = am.getParameters();
     Class<?>[] paramsTypes = method.getParameterTypes();
