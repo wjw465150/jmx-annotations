@@ -111,15 +111,17 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
     boolean readable = true;
     boolean writable = true;
 
-    this.visitAnnotatedField(af, readable, writable);
-  }
-
-  protected <T> void visitAnnotatedField(AnnotatedField<T> af, boolean readable, boolean writable) {
-    // add the field to the collection of exposed fields
     Field field = af.getJavaMember();
     if ((field.getModifiers() & Modifier.FINAL) == Modifier.FINAL) {
       writable = false;
     }
+
+    this.visitAnnotatedField(af, readable, writable);
+  }
+
+  protected <T> void visitAnnotatedField(AnnotatedField<T> af, boolean readable, boolean writable) {
+    Field field = af.getJavaMember();
+    // add the field to the collection of exposed fields
     exposedFields.add(af.getJavaMember());
 
     // create the MBeanAttributeInfo
@@ -143,17 +145,19 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
    */
   @Override
   public <T> void visitAnnotatedMethod(AnnotatedMethod<T> am) {
-    visitAnnotatedMethod(am, Impact.UNKNOWN);
-  }
-
-  protected <T> void visitAnnotatedMethod(AnnotatedMethod<T> am, Impact impact) {
-    // add the method to the collection of exposed methods
     Method method = am.getJavaMember();
-    if (am.getAnnotation(ManagedOperation.class) == null) { //@wjw_note: 对没有注解的方法,只暴露public的.
+    if (!am.isAnnotationPresent(ManagedOperation.class)) { //@wjw_note: 对没有注解的方法,只暴露public的.
       if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC) {
         return;
       }
     }
+
+    visitAnnotatedMethod(am, Impact.UNKNOWN);
+  }
+
+  protected <T> void visitAnnotatedMethod(AnnotatedMethod<T> am, Impact impact) {
+    Method method = am.getJavaMember();
+    // add the method to the collection of exposed methods
     exposedMethods.add(am.getJavaMember());
 
     // create the MBeanOperationInfo
