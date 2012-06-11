@@ -22,7 +22,7 @@ public class TestMain {
 
       // register the MBean
       ms.registerMBean(mBean, new ObjectName("org.test:type=VisitorCounter"));
-      ms.registerMBean(mBean, MBeanServerLocator.getObjectName(visitorCounterA));
+      ms.registerMBean(mBean, null);  //由MBeanImpl自动提供ObjectName
       
       User user = new User("一枝花",18);
       DynamicMBean mBeanB = mBeanFactory.createMBean(user);

@@ -50,23 +50,4 @@ public class MBeanServerLocator {
     return mBeanServer;
   }
 
-  public static ObjectName getObjectName(Object instance) throws Exception {
-    AnnotatedType<?> at = ReflectionAnnotatedFactory.introspectType(instance.getClass());
-    String name = "";
-
-    if (at.isAnnotationPresent(MBean.class)) {
-      MBean mBeanAnnotation = at.getAnnotation(MBean.class);
-      name = mBeanAnnotation.value();
-      if (name != null && name.equals("")) {
-        name = null;
-      }
-    }
-
-    if (name == null) {
-      name = at.getJavaClass().getPackage().getName() + ":type=" + at.getJavaClass().getSimpleName();
-    }
-
-    return new ObjectName(name);
-  }
-
 }

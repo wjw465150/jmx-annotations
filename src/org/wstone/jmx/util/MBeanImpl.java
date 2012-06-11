@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Set;
 
+import javax.enterprise.inject.spi.AnnotatedType;
 import javax.management.Attribute;
 import javax.management.AttributeList;
 import javax.management.AttributeNotFoundException;
@@ -14,8 +15,14 @@ import javax.management.DynamicMBean;
 import javax.management.InvalidAttributeValueException;
 import javax.management.MBeanException;
 import javax.management.MBeanInfo;
+import javax.management.MBeanRegistration;
+import javax.management.MBeanServer;
+import javax.management.ObjectName;
 import javax.management.ReflectionException;
 import javax.management.RuntimeOperationsException;
+
+import org.wstone.jmx.MBean;
+import org.wstone.jmx.std.reflect.ReflectionAnnotatedFactory;
 
 /**
  * @author German Escobar,wjw465150
@@ -25,7 +32,7 @@ import javax.management.RuntimeOperationsException;
  *          The implementation of DynamicMBean. Uses the {@link ExposedMembers}
  *          to retrieve the exposed fields and operations of the instance.
  */
-public class MBeanImpl<T> implements DynamicMBean {
+public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
 
   private T implementation;
 
@@ -34,6 +41,8 @@ public class MBeanImpl<T> implements DynamicMBean {
   private java.util.Map<String, Method> exposedMethods;
 
   private MBeanInfo mBeanInfo;
+
+  private ObjectName name;
 
   public MBeanImpl(T implementation, Field[] exposedFields, Method[] exposedMethods,
       MBeanInfo mBeanInfo) {
@@ -277,5 +286,51 @@ public class MBeanImpl<T> implements DynamicMBean {
     }
     buf.append(']');
     dejaVu.remove(a);
+  }
+
+  private ObjectName getObjectName(Object instance) throws Exception {
+    AnnotatedType<?> at = ReflectionAnnotatedFactory.introspectType(instance.getClass());
+    String name = "";
+
+    if (at.isAnnotationPresent(MBean.class)) {
+      MBean mBeanAnnotation = at.getAnnotation(MBean.class);
+      name = mBeanAnnotation.value();
+      if (name != null && name.equals("")) {
+        name = null;
+      }
+    }
+
+    if (name == null) {
+      name = at.getJavaClass().getPackage().getName() + ":type=" + at.getJavaClass().getSimpleName();
+    }
+
+    return new ObjectName(name);
+  }
+
+  @Override
+  public ObjectName preRegister(MBeanServer server, ObjectName name) throws Exception {
+    this.name = name;
+    if (this.name == null) {
+      this.name = this.getObjectName(implementation);
+    }
+    return this.name;
+  }
+
+  @Override
+  public void postRegister(Boolean registrationDone) {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public void preDeregister() throws Exception {
+    // TODO Auto-generated method stub
+
+  }
+
+  @Override
+  public void postDeregister() {
+    // TODO Auto-generated method stub
+
   }
 }
