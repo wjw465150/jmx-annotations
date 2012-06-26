@@ -12,6 +12,8 @@ import java.lang.annotation.Target;
 @Retention(value = RUNTIME)
 @Target(value = { FIELD })
 public @interface ManagedAttribute {
+  String description() default "";
+  
   boolean readable() default true;
 
   boolean writable() default true;

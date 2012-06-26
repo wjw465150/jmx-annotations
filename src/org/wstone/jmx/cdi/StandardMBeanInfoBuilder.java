@@ -21,6 +21,8 @@ import javax.management.MBeanParameterInfo;
 
 import org.wstone.jmx.Description;
 import org.wstone.jmx.Impact;
+import org.wstone.jmx.MBean;
+import org.wstone.jmx.ManagedAttribute;
 import org.wstone.jmx.ManagedOperation;
 
 /**
@@ -75,7 +77,10 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
     this.className = at.getJavaClass().getName();
 
     // retrieve the description
-    if (at.isAnnotationPresent(Description.class)) {
+    if (at.isAnnotationPresent(MBean.class)) {
+      MBean annMBean = at.getAnnotation(MBean.class);
+      this.description = annMBean.description();
+    } else if (at.isAnnotationPresent(Description.class)) {
       Description annDescription = at.getAnnotation(Description.class);
       this.description = annDescription.value();
     }
@@ -126,7 +131,10 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
 
     // create the MBeanAttributeInfo
     String fieldDescription = "";
-    if (af.isAnnotationPresent(Description.class)) {
+    if (af.isAnnotationPresent(ManagedAttribute.class)) {
+      ManagedAttribute annManagedAttribute = af.getAnnotation(ManagedAttribute.class);
+      fieldDescription = annManagedAttribute.description();
+    } else if (af.isAnnotationPresent(Description.class)) {
       Description annDescription = af.getAnnotation(Description.class);
       fieldDescription = annDescription.value();
     }
@@ -162,7 +170,10 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
 
     // create the MBeanOperationInfo
     String methodDescription = "";
-    if (am.isAnnotationPresent(Description.class)) {
+    if (am.isAnnotationPresent(ManagedOperation.class)) {
+      ManagedOperation annManagedOperation = am.getAnnotation(ManagedOperation.class);
+      methodDescription = annManagedOperation.description();
+    } else if (am.isAnnotationPresent(Description.class)) {
       Description annDescription = am.getAnnotation(Description.class);
       methodDescription = annDescription.value();
     }

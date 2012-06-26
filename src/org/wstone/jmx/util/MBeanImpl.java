@@ -347,7 +347,7 @@ public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
 
     if (at.isAnnotationPresent(MBean.class)) {
       MBean mBeanAnnotation = at.getAnnotation(MBean.class);
-      name = mBeanAnnotation.value();
+      name = mBeanAnnotation.objectName();
       if (name != null && name.equals("")) {
         name = null;
       }

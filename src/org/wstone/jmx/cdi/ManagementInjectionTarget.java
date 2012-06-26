@@ -83,7 +83,7 @@ public class ManagementInjectionTarget<T> implements InjectionTarget<T> {
 
     if (at.isAnnotationPresent(MBean.class)) {
       MBean mBeanAnnotation = at.getAnnotation(MBean.class);
-      name = mBeanAnnotation.value();
+      name = mBeanAnnotation.objectName();
       if (name != null && name.equals("")) {
         name = null;
       }

@@ -11,5 +11,7 @@ import java.lang.annotation.Target;
 @Retention(value = RUNTIME)
 @Target(value = { METHOD })
 public @interface ManagedOperation {
+  String description() default "";
+
   Impact impact() default Impact.UNKNOWN;
 }

@@ -13,7 +13,9 @@ import java.lang.annotation.Target;
 @Target(value = TYPE)
 @Inherited
 public @interface MBean {
-  String value() default "";
+  String objectName() default "";
+
+  String description() default "";
 
   boolean autoRegister() default true;
 }
