@@ -1,6 +1,26 @@
 package wjw.test.jmx.annotation;
 
 public class User {
+  private boolean nan;
+
+  public boolean isNan() {
+    return nan;
+  }
+
+  void setNan(boolean nan) {
+    this.nan = nan;
+  }
+
+  private Boolean Xy = true;
+
+  public Boolean getXy() {
+    return Xy;
+  }
+
+  public void setXy(Boolean xy) {
+    Xy = xy;
+  }
+
   private final String name;
 
   public String getName() {

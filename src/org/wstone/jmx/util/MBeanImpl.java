@@ -33,10 +33,14 @@ import org.wstone.jmx.std.reflect.ReflectionAnnotatedFactory;
  *          to retrieve the exposed fields and operations of the instance.
  */
 public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
-
+  private static final Class<?> nullClass = null;
+  private static final Object nullObject = null;
+  
   private T implementation;
 
   private java.util.Map<String, Field> exposedFields;
+  private java.util.Map<String, Method> exposedFieldsGet;
+  private java.util.Map<String, Method> exposedFieldsSet;
 
   private java.util.Map<String, Method> exposedMethods;
 
@@ -48,13 +52,35 @@ public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
       MBeanInfo mBeanInfo) {
     this.implementation = implementation;
     this.exposedFields = new java.util.HashMap<String, Field>(exposedFields.length);
+    this.exposedFieldsGet = new java.util.HashMap<String, Method>(exposedFields.length);
+    this.exposedFieldsSet = new java.util.HashMap<String, Method>(exposedFields.length);
     this.exposedMethods = new java.util.HashMap<String, Method>(exposedMethods.length);
     this.mBeanInfo = mBeanInfo;
 
+    Class<? extends Object> clz = implementation.getClass();
     for (Field field : exposedFields) { //@wjw_add
       field.setAccessible(true);
       this.exposedFields.put(field.getName(), field);
+      //查找是否有可用的get/set方法
+      try {
+        String getName = "get" + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1);
+        if (field.getType().getSimpleName().equals("boolean")) {
+          getName = "is" + getName.substring(3);
+        }
+        Method getMethod = clz.getMethod(getName, nullClass);
+        this.exposedFieldsGet.put(field.getName(), getMethod);
+      } catch (Exception e) {
+        //e.printStackTrace();
+      }
+      try {
+        String setName = "set" + field.getName().substring(0, 1).toUpperCase() + field.getName().substring(1);
+        Method setMethod = clz.getMethod(setName, new Class[] { field.getType() });
+        this.exposedFieldsSet.put(field.getName(), setMethod);
+      } catch (Exception e) {
+        //e.printStackTrace();
+      }
     }
+
     for (Method method : exposedMethods) { //@wjw_add
       method.setAccessible(true);
       this.exposedMethods.put(method.getName() + StrDump(method.getParameterTypes()), method);
@@ -70,11 +96,16 @@ public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
     }
 
     try {
-      Field f = exposedFields.get(attributeName);
-      if (f != null) {
-        return f.get(implementation);
+      Method getMethod = exposedFieldsGet.get(attributeName);
+      if (getMethod != null) {
+        return getMethod.invoke(implementation, nullObject);
+      } else {
+        Field f = exposedFields.get(attributeName);
+        if (f != null) {
+          return f.get(implementation);
+        }
       }
-    } catch (IllegalAccessException e) {
+    } catch (Exception e) {
       return new ReflectionException(e);
     }
 
@@ -125,21 +156,29 @@ public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
       throw (new InvalidAttributeValueException("Cannot set attribute " + name + " to null"));
     }
 
-    Field f = exposedFields.get(name);
-    if (f != null) {
-      if (isAssignable(f.getType(), value.getClass())) {
-        try {
-          f.set(implementation, value);
-        } catch (IllegalAccessException e) {
-          throw new ReflectionException(e);
-        }
-      } else {
-        throw (new InvalidAttributeValueException("Cannot set attribute " + name + " to a " + value.getClass().getName() + " object, " + f.getType().getName() + " expected"));
+    Method setMethod = exposedFieldsSet.get(name);
+    if (setMethod != null) {
+      try {
+        setMethod.invoke(implementation, value);
+      } catch (Exception e) {
+        throw new ReflectionException(e);
       }
-
     } else {
-      // no attributes for this class, throw a AttributeNotFoundException
-      throw (new AttributeNotFoundException("Attribute " + name + " not found in " + mBeanInfo.getClassName()));
+      Field f = exposedFields.get(name);
+      if (f != null) {
+//注释掉不检查是否可以赋值        if (isAssignable(f.getType(), value.getClass())) {
+          try {
+            f.set(implementation, value);
+          } catch (Exception e) {
+            throw new ReflectionException(e);
+          }
+//        } else {
+//          throw (new InvalidAttributeValueException("Cannot set attribute " + name + " to a " + value.getClass().getName() + " object, " + f.getType().getName() + " expected"));
+//        }
+      } else {
+        // no attributes for this class, throw a AttributeNotFoundException
+        throw (new AttributeNotFoundException("Attribute " + name + " not found in " + mBeanInfo.getClassName()));
+      }
     }
   }
 
@@ -217,6 +256,20 @@ public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
   private Class<?> fromPrimitiveToObject(Class<?> primitive) {
     if (primitive.equals(Integer.TYPE)) {
       return Integer.class;
+    } else if (primitive.equals(Float.TYPE)) {
+      return Float.class;
+    } else if (primitive.equals(Long.TYPE)) {
+      return Long.class;
+    } else if (primitive.equals(Double.TYPE)) {
+      return Double.class;
+    } else if (primitive.equals(Short.TYPE)) {
+      return Short.class;
+    } else if (primitive.equals(Boolean.TYPE)) {
+      return Boolean.class;
+    } else if (primitive.equals(Byte.TYPE)) {
+      return Byte.class;
+    } else if (primitive.equals(Character.TYPE)) {
+      return Character.class;
     }
 
     return primitive;

@@ -10,7 +10,7 @@ import java.lang.annotation.Target;
 
 @Documented
 @Retention(value = RUNTIME)
-@Target(value = { FIELD, METHOD })
+@Target(value = { FIELD })
 public @interface ManagedAttribute {
   boolean readable() default true;
 
