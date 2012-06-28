@@ -332,6 +332,8 @@ public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
           String value = element.toString();
           if (value.startsWith("class ")) {
             value = value.substring(6);
+          } else if(value.startsWith("interface ")) {
+            value = value.substring(10);
           }
           buf.append(value);
         }

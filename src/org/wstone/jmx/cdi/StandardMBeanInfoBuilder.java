@@ -117,7 +117,7 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
     boolean writable = true;
 
     Field field = af.getJavaMember();
-    if ((field.getModifiers() & Modifier.FINAL) == Modifier.FINAL) {
+    if (Modifier.isFinal(field.getModifiers())) {
       writable = false;
     }
 
@@ -155,7 +155,7 @@ public class StandardMBeanInfoBuilder implements AnnotatedTypeVisitor {
   public <T> void visitAnnotatedMethod(AnnotatedMethod<T> am) {
     Method method = am.getJavaMember();
     if (!am.isAnnotationPresent(ManagedOperation.class)) { //@wjw_note: 对没有注解的方法,只暴露public的.
-      if ((method.getModifiers() & Modifier.PUBLIC) != Modifier.PUBLIC) {
+      if (!Modifier.isPublic(method.getModifiers())) {
         return;
       }
     }
