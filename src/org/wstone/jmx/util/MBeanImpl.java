@@ -35,7 +35,7 @@ import org.wstone.jmx.std.reflect.ReflectionAnnotatedFactory;
 public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
   private static final Class<?> nullClass = null;
   private static final Object nullObject = null;
-  
+
   private T implementation;
 
   private java.util.Map<String, Field> exposedFields;
@@ -166,15 +166,15 @@ public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
     } else {
       Field f = exposedFields.get(name);
       if (f != null) {
-//注释掉不检查是否可以赋值        if (isAssignable(f.getType(), value.getClass())) {
-          try {
-            f.set(implementation, value);
-          } catch (Exception e) {
-            throw new ReflectionException(e);
-          }
-//        } else {
-//          throw (new InvalidAttributeValueException("Cannot set attribute " + name + " to a " + value.getClass().getName() + " object, " + f.getType().getName() + " expected"));
-//        }
+        //注释掉不检查是否可以赋值        if (isAssignable(f.getType(), value.getClass())) {
+        try {
+          f.set(implementation, value);
+        } catch (Exception e) {
+          throw new ReflectionException(e);
+        }
+        //        } else {
+        //          throw (new InvalidAttributeValueException("Cannot set attribute " + name + " to a " + value.getClass().getName() + " object, " + f.getType().getName() + " expected"));
+        //        }
       } else {
         // no attributes for this class, throw a AttributeNotFoundException
         throw (new AttributeNotFoundException("Attribute " + name + " not found in " + mBeanInfo.getClassName()));
@@ -332,7 +332,7 @@ public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
           String value = element.toString();
           if (value.startsWith("class ")) {
             value = value.substring(6);
-          } else if(value.startsWith("interface ")) {
+          } else if (value.startsWith("interface ")) {
             value = value.substring(10);
           }
           buf.append(value);
@@ -345,12 +345,15 @@ public class MBeanImpl<T> implements DynamicMBean, MBeanRegistration {
 
   private ObjectName getObjectName(Object instance) throws Exception {
     AnnotatedType<?> at = ReflectionAnnotatedFactory.introspectType(instance.getClass());
-    String name = "";
+    String name = null;
 
     if (at.isAnnotationPresent(MBean.class)) {
       MBean mBeanAnnotation = at.getAnnotation(MBean.class);
       name = mBeanAnnotation.objectName();
       if (name != null && name.equals("")) {
+        name = null;
+      } else if (!name.contains(":type=")) {
+        System.err.println("WARN-->MBean[" + instance.getClass().getName() + "]ObjectName='" + name + "' No Property ':type='!");
         name = null;
       }
     }

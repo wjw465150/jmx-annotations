@@ -18,7 +18,7 @@ public class TestMain {
       DynamicMBean mBean = mBeanFactory.createMBean(visitorCounterA);
 
       // find MBeanServer
-      MBeanServer ms = MBeanServerLocator.instance().getmBeanServer();
+      MBeanServer ms = MBeanServerLocator.instance().getMBeanServer();
 
       // register the MBean
       ms.registerMBean(mBean, new ObjectName("org.test:type=VisitorCounter"));

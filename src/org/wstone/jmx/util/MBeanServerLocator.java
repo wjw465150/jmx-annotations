@@ -12,24 +12,24 @@ import org.wstone.jmx.std.reflect.ReflectionAnnotatedFactory;
 
 public class MBeanServerLocator {
 
-  private MBeanServer mBeanServer;
+  private MBeanServer _MBeanServer;
 
   private static final MBeanServerLocator instance = new MBeanServerLocator();
 
   private MBeanServerLocator() {
-    this.mBeanServer = locateMBeanServer();
+    this._MBeanServer = locateMBeanServer();
   }
 
   public static MBeanServerLocator instance() {
     return instance;
   }
 
-  public MBeanServer getmBeanServer() {
-    return mBeanServer;
+  public MBeanServer getMBeanServer() {
+    return _MBeanServer;
   }
 
-  public void setmBeanServer(MBeanServer mBeanServer) {
-    this.mBeanServer = mBeanServer;
+  public void setMBeanServer(MBeanServer mBeanServer) {
+    this._MBeanServer = mBeanServer;
   }
 
   private MBeanServer locateMBeanServer() {

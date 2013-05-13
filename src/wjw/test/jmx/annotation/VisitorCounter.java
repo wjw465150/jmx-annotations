@@ -2,7 +2,7 @@ package wjw.test.jmx.annotation;
 
 import org.wstone.jmx.*;
 
-@MBean(description = "访问计数类")
+@MBean(description = "访问计数类",objectName="com.aws.jmx:type=VisitorCounter")
 public class VisitorCounter {
 
   @ManagedAttribute(description = "访问次数", writable = false, readable = true)

@@ -41,7 +41,7 @@ public class ManagementInjectionTarget<T> implements InjectionTarget<T> {
 
       objectName = this.getObjectName(at);
 
-      MBeanServer mBeanServer = MBeanServerLocator.instance().getmBeanServer();
+      MBeanServer mBeanServer = MBeanServerLocator.instance().getMBeanServer();
       mBeanServer.registerMBean(mBeanImpl, objectName);
     } catch (Exception e) {
       e.printStackTrace();
@@ -54,7 +54,7 @@ public class ManagementInjectionTarget<T> implements InjectionTarget<T> {
     delegate.preDestroy(instance);
 
     try {
-      MBeanServer mBeanServer = MBeanServerLocator.instance().getmBeanServer();
+      MBeanServer mBeanServer = MBeanServerLocator.instance().getMBeanServer();
       mBeanServer.unregisterMBean(objectName);
     } catch (Exception e) {
       e.printStackTrace();
